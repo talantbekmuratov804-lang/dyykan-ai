@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дыйкан Күндөлүгү AI</title>
+    <style>
+        html, body { height: 100%; margin: 0; padding: 0; background-color: #0f1115; }
+        body { font-family: Arial, sans-serif; color: #e1e4ea; display: flex; justify-content: center; align-items: flex-start; }
+        .search-box { width: 100vw; min-height: 100vh; background: #0f1115; padding: 25px; box-sizing: border-box; }
+        h1 { color: #2ecc71; font-size: 30px; margin-top: 20px; margin-bottom: 5px; text-align: center; font-weight: bold; }
+        .subtitle { font-size: 15px; color: #a0aab5; text-align: center; margin-bottom: 25px; }
+        input[type="text"] { width: 100%; padding: 18px; border: 2px solid #2c303b; background: #161a23; color: #fff; border-radius: 12px; font-size: 18px; box-sizing: border-box; }
+        input[type="text"]:focus { border-color: #2ecc71; outline: none; }
+        button { width: 100%; padding: 18px; background: #2ecc71; color: white; border: none; border-radius: 12px; font-size: 20px; cursor: pointer; font-weight: bold; margin-top: 15px; }
+        #result-div { margin-top: 30px; padding: 25px; border-left: 6px solid #2ecc71; background: #161a23; text-align: left; display: none; border-radius: 12px; font-size: 16px; line-height: 1.7; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
+        .loading { color: #f1c40f; font-weight: bold; animation: blink 1s infinite; }
+        @keyframes blink { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+        
+        .ad-banner { margin-top: 30px; background: linear-gradient(135deg, #e67e22, #d35400); padding: 15px; border-radius: 12px; text-align: center; color: white; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3); cursor: pointer; transition: transform 0.2s; }
+        .ad-banner:hover { transform: scale(1.02); }
+        .ad-title { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9; margin-bottom: 5px; }
+        .ad-text { font-size: 18px; }
+    </style>
+</head>
+<body>
+    <div class="search-box">
+        <h1>🌾 Дыйкан Күндөлүгү AI</h1>
+        <div class="subtitle">Айыл чарбасы, мал жана унаа оңдоо боюнча акылдуу жардамчы</div>
+        <input type="text" id="text-input" placeholder="Каалаган сурооңузду жазыңыз...">
+        <button onclick="searchEquipment()">Изилдөө жана Жооп Алуу</button>
+        
+        <div class="ad-banner" onclick="alert('Жарнама берүү үчүн байланышыңыз: +996 551 177 723')">
+            <div class="ad-title">📢 Жарнама орду</div>
+            <div class="ad-text">Бул жерге жарнамаңызды жайгаштырыңыз!</div>
+        </div>
+
+        <div id="result-div"></div>
+    </div>
+    <script>
+    async function searchEquipment() {
+        var aiDiv = document.getElementById("result-div");
+        var textInput = document.getElementById("text-input");
+        if (!aiDiv || !textInput) return;
+        var query = textInput.value.trim();
+        if (!query) return;
+
+        aiDiv.style.display = "block";
+        aiDiv.innerHTML = "<span class='loading'>🔄 Жасалма интеллект сурооңузду талдап жатат...</span>";
+
+        try {
+            var response = await fetch("https://huggingface.co", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    inputs: "<|im_start|>system\nСен айыл чарбасы, техника жана бардык суроолор боюнча дүйнөдөгү эң акылдуу жасалма интеллект жардамчысысың. Колдонуучунун суроосуна дайыма кыргыз тилинде, абдан так, өтө узун, кеңири жана ийне-жибине чейин майдалап жооп бер.<|im_end|>\n<|im_start|>user\n" + query + "<|im_end|>\n<|im_start| assistant\n",
+                    parameters: { max_new_tokens: 1500, temperature: 0.7 }
+                })
+            });
+            var data = await response.json();
+            var aiResponse = "";
+            if (data && data && data.generated_text) {
+                var fullText = data.generated_text;
+                aiResponse = fullText.split("<|im_start|> assistant\n") || fullText;
+                aiResponse = aiResponse.split("<|im_end|>");
+            } else if (data && data.generated_text) {
+                aiResponse = data.generated_text;
+            }
+            if (aiResponse) {
+                aiResponse = aiResponse.replace(/\n/g, "<br>");
+                aiDiv.innerHTML = "💡 <b>ЖАСАЛМА ИНТЕЛЛЕКТТИН ЖООБУ (ИЙНЕ-ЖИБИНЕ ЧЕЙИН):</b><br><br>" + aiResponse;
+            } else {
+                throw new Error("Empty response");
+            }
+        } catch (error) {
+            var lowerQuery = query.toLowerCase();
+            var backup = "• <b>Кой семиртүү:</b> 45-60 күн, арпа жана жүгөрү рациону зарыл. Башында курттан тазалаңыз.<br>• <b>Бука семиртүү:</b> 3-4 ай байлап багылат. Акыркы айда жем 4-6 кг жетет.<br>• <b>Трактор от албаса:</b> Фильтрден абаны чыгарыңыз же клеммаларды наждак менен тазалаңыз.";
+            aiDiv.innerHTML = "🛰️ <b>РЕЗЕРВДИК ОФФЛАЙН БАЗАДАН ЖООП:</b><br><br>Интернет байланышын текшериңиз же бир аз күтүп кайра басыңыз.<br><br>" + backup;
+        }
+    }
+    </script>
+</body>
+</html>
